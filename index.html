@@ -574,9 +574,10 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 </div>
 <script>
 // ========== CONFIG ==========
-const AMAP_KEY = 'd741d5e7cdf0bf707a66a6bd00fc1523';
-const SB_URL = 'https://wdofuppnjvigzepijudi.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indkb2Z1cHBuanZpZ3plcGlqdWRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODk5MDgsImV4cCI6MjA4OTM2NTkwOH0.3wQfvemzGo5SAUQNAs4hyJwVqAjk7ZINplvC34hJ6K8';
+// 注意：以下API密钥已脱敏，请在实际使用时从环境变量或配置文件中获取
+const AMAP_KEY = 'YOUR_AMAP_API_KEY';
+const SB_URL = 'YOUR_SUPABASE_URL';
+const SB_KEY = 'YOUR_SUPABASE_API_KEY';
 const SB_HEADERS = {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'};
 
 // ========== SUPABASE HELPERS ==========
@@ -617,10 +618,10 @@ const MOOD_CAT_MAP = {rice:['米饭类'],noodle:['面食类'],snack:['小吃类'
 
 // ========== STATE ==========
 let state = {
-  foods:[],
+  foods:[
   settings:{weatherOn:true,festivalOn:true,nearbyOn:true,
-    aiUrl:'https://api.deepseek.com',aiKey:'sk-5c593b218ef14b858c3460bf8a364539',aiModel:'deepseek-chat'},
-  history:[],
+    aiUrl:'https://api.deepseek.com',aiKey:'YOUR_DEEPSEEK_API_KEY',aiModel:'deepseek-chat'},
+  history:[
   currentMood:'any',
   weather:null,
   location:null,
