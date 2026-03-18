@@ -600,7 +600,6 @@ async function loadEnv() {
 let AMAP_KEY = 'YOUR_AMAP_API_KEY';
 let SB_URL = 'YOUR_SUPABASE_URL';
 let SB_KEY = 'YOUR_SUPABASE_API_KEY';
-let DEEPSEEK_API_KEY = 'YOUR_DEEPSEEK_API_KEY';
 
 // 初始化配置
 async function initConfig() {
@@ -608,11 +607,8 @@ async function initConfig() {
   AMAP_KEY = env.AMAP_KEY || AMAP_KEY;
   SB_URL = env.SUPABASE_URL || SB_URL;
   SB_KEY = env.SUPABASE_KEY || SB_KEY;
-  DEEPSEEK_API_KEY = env.DEEPSEEK_API_KEY || DEEPSEEK_API_KEY;
   // 更新headers
   SB_HEADERS = {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'};
-  // 更新state中的AI配置
-  state.settings.aiKey = DEEPSEEK_API_KEY;
 }
 
 // 初始化配置

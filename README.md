@@ -63,12 +63,91 @@ cd eat-what
 AMAP_KEY=your_amap_api_key
 SUPABASE_URL=your_supabase_url
 SUPABASE_KEY=your_supabase_api_key
-DEEPSEEK_API_KEY=your_deepseek_api_key
 ```
 
-- **高德地图API Key**：用于获取位置和附近美食
-- **Supabase API Key**：用于数据存储
-- **AI模型API Key**：用于AI助手功能
+#### 2.1 获取高德地图API Key
+
+1. 访问 [高德开放平台](https://lbs.amap.com/)
+2. 注册/登录账号
+3. 进入控制台，点击「应用管理」→「我的应用」→「创建新应用」
+4. 填写应用名称，选择应用类型（选择「Web端(JS API)」）
+5. 创建完成后，点击「添加Key」
+6. 选择「Web服务」，输入Key名称，提交后即可获得API Key
+
+#### 2.2 获取Supabase数据库API Key
+
+1. 访问 [Supabase官网](https://supabase.com/)
+2. 点击「Start your project」或「Sign In」登录
+3. 点击「New Project」创建新项目
+4. 填写项目信息：
+   - **Name**：项目名称（如：eat-what）
+   - **Database Password**：设置数据库密码（请妥善保存）
+   - **Region**：选择离你最近的区域（如：Northeast Asia (Tokyo)）
+5. 点击「Create new project」，等待项目创建完成（通常需要1-2分钟）
+6. 项目创建完成后，进入项目仪表板
+7. 点击左侧菜单的「Settings」→「API」
+8. 复制以下信息到 `.env` 文件：
+   - **Project URL**：对应 `SUPABASE_URL`
+   - **anon public** key：对应 `SUPABASE_KEY`
+
+#### 2.3 创建数据库表
+
+在Supabase项目中创建以下表：
+
+1. **foods 表**（存储菜品信息）
+   - 点击左侧菜单的「Table Editor」→「Create a new table」
+   - 表名：`foods`
+   - 添加以下列：
+     - `id`：int8, primary key
+     - `name`：text, not null
+     - `cat`：text（分类）
+     - `emoji`：text
+     - `description`：text
+     - `tags`：text[]（数组）
+     - `price`：numeric
+     - `type`：text（用餐方式：dine-in/delivery）
+     - `rating`：int（评分1-5）
+     - `eat_count`：int（食用次数）
+     - `shop`：text（店铺名称）
+     - `created_at`：timestamptz, default: now()
+     - `updated_at`：timestamptz
+
+2. **settings 表**（存储用户设置）
+   - 表名：`settings`
+   - 添加以下列：
+     - `id`：int8, primary key, default: 1
+     - `weather_on`：boolean, default: true
+     - `festival_on`：boolean, default: true
+     - `nearby_on`：boolean, default: true
+     - `ai_url`：text
+     - `ai_key`：text
+     - `ai_model`：text, default: 'deepseek-chat'
+     - `created_at`：timestamptz, default: now()
+     - `updated_at`：timestamptz
+
+3. **history 表**（存储历史记录）
+   - 表名：`history`
+   - 添加以下列：
+     - `id`：int8, primary key
+     - `food_name`：text
+     - `food_emoji`：text
+     - `eaten_at`：timestamptz, default: now()
+
+#### 2.4 配置大模型API
+
+大模型配置不需要在 `.env` 文件中设置，用户可以在应用的「设置」页面手动配置：
+
+1. 打开应用，进入「设置」页面
+2. 在「AI大模型配置」部分填写：
+   - **API地址**：如 `https://api.deepseek.com`
+   - **API Key**：你的大模型API密钥
+   - **模型名称**：如 `deepseek-chat`
+3. 点击保存，配置会自动存储到数据库中
+
+支持的大模型包括：
+- DeepSeek
+- OpenAI (GPT系列)
+- 其他兼容OpenAI API格式的模型
 
 注意：`.env` 文件已添加到 `.gitignore` 中，不会被提交到版本控制系统。
 
