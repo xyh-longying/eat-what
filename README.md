@@ -56,11 +56,21 @@ cd eat-what
 
 ### 2. 配置API Keys
 
-在 `index.html` 文件中配置以下API密钥：
+创建 `.env` 文件并配置以下API密钥：
+
+```
+# API Keys
+AMAP_KEY=your_amap_api_key
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_api_key
+DEEPSEEK_API_KEY=your_deepseek_api_key
+```
 
 - **高德地图API Key**：用于获取位置和附近美食
 - **Supabase API Key**：用于数据存储
 - **AI模型API Key**：用于AI助手功能
+
+注意：`.env` 文件已添加到 `.gitignore` 中，不会被提交到版本控制系统。
 
 ### 3. 启动应用
 
@@ -116,6 +126,6 @@ MIT License
 
 ## 联系方式
 
-- 项目地址：<repository-url>
-- 作者：[Your Name]
+- 项目地址：https://github.com/xyh-longying/eat-what
+- 作者：xyh_longying
 - 日期：2026-03-18
