@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>今天吃什么？</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --primary:#E8732A;--primary-light:#F4A261;--primary-dark:#C45A1A;
+  --accent:#E76F51;--accent2:#F4845F;
+  --warm-bg:#FFF8F0;--warm-card:#FFFFFF;--warm-surface:#FEF0E3;
+  --text-primary:#3D2C1E;--text-secondary:#8B7355;--text-muted:#B8A692;
+  --danger:#D64045;--success:#5B8C5A;
+  --shadow-sm:0 2px 8px rgba(139,95,52,.08);
+  --shadow-md:0 4px 20px rgba(139,95,52,.12);
+  --shadow-lg:0 8px 40px rgba(139,95,52,.18);
+  --shadow-glow:0 0 30px rgba(232,115,42,.25);
+  --radius:16px;--radius-sm:10px;--radius-lg:24px;
+  --font-display:'ZCOOL KuaiLe',cursive;
+  --font-body:'Noto Sans SC',sans-serif;
+  --nav-h:68px;
+}
+html,body{height:100%;overflow:hidden;font-family:var(--font-body);background:var(--warm-bg);color:var(--text-primary)}
+body{display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size:128px 128px}
+.bg-blob{position:fixed;border-radius:50%;filter:blur(80px);opacity:.12;pointer-events:none;z-index:0}
+.bg-blob-1{width:300px;height:300px;background:#F4A261;top:-80px;right:-60px}
+.bg-blob-2{width:250px;height:250px;background:#E76F51;bottom:100px;left:-80px}
+.bg-blob-3{width:200px;height:200px;background:#FBC97E;top:40%;right:20%}
+.app{position:relative;z-index:1;display:flex;flex-direction:column;height:100%;overflow:hidden}
+.page{display:none;flex:1;overflow-y:auto;overflow-x:hidden;padding:16px 16px calc(var(--nav-h) + 16px);
+  -webkit-overflow-scrolling:touch;scroll-behavior:smooth}
+.page.active{display:block;animation:pageFadeIn .3s ease}
+.page.chat-container{display:none}
+.page.chat-container.active{display:flex;animation:pageFadeIn .3s ease}
+@keyframes pageFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(255,255,255,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid rgba(232,115,42,.1);
+  display:flex;justify-content:space-around;align-items:center;
+  height:var(--nav-h);padding-bottom:env(safe-area-inset-bottom)}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 12px;cursor:pointer;transition:all .25s;position:relative;
+  color:var(--text-muted);font-size:10px;font-weight:500;user-select:none}
+.nav-item svg{width:22px;height:22px;transition:all .25s}
+.nav-item.active{color:var(--primary)}
+.nav-item.active svg{transform:scale(1.1)}
+.nav-item.active::before{content:'';position:absolute;top:-1px;left:50%;transform:translateX(-50%);
+  width:24px;height:3px;background:var(--primary);border-radius:0 0 3px 3px}
+
+/* Home page */
+.home-header{text-align:center;padding:8px 0 12px}
+.weather-strip{display:flex;align-items:center;justify-content:center;gap:8px;
+  font-size:13px;color:var(--text-secondary);margin-bottom:6px;flex-wrap:wrap}
+.weather-strip .weather-icon{font-size:20px}
+.location-text{font-size:11px;color:var(--text-muted)}
+.festival-badge{display:inline-flex;align-items:center;gap:4px;
+  background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff;
+  padding:3px 12px;border-radius:20px;font-size:12px;font-weight:500;
+  animation:festPulse 2s ease-in-out infinite}
+@keyframes festPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,165,0,.3)}50%{box-shadow:0 0 0 8px rgba(255,165,0,0)}}
+.mood-bar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.mood-pill{padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;
+  background:var(--warm-surface);border:1.5px solid transparent;cursor:pointer;
+  transition:all .25s;color:var(--text-secondary);white-space:nowrap;user-select:none}
+.mood-pill.active{background:var(--primary);color:#fff;border-color:var(--primary);
+  box-shadow:0 3px 12px rgba(232,115,42,.3)}
+.spin-section{display:flex;flex-direction:column;align-items:center;margin:16px 0}
+.spin-btn{width:170px;height:170px;border-radius:50%;border:none;cursor:pointer;
+  background:linear-gradient(145deg,var(--primary),var(--accent));
+  color:#fff;font-family:var(--font-display);font-size:24px;
+  box-shadow:var(--shadow-lg),inset 0 -4px 12px rgba(0,0,0,.15);
+  transition:all .3s cubic-bezier(.175,.885,.32,1.275);position:relative;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  line-height:1.3;letter-spacing:1px;user-select:none;overflow:hidden}
+.spin-btn::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:conic-gradient(from 0deg,transparent,rgba(255,255,255,.15),transparent);
+  animation:btnShimmer 4s linear infinite}
+@keyframes btnShimmer{to{transform:rotate(360deg)}}
+.spin-btn:hover{transform:scale(1.06);box-shadow:var(--shadow-glow)}
+.spin-btn:active{transform:scale(.96)}
+.spin-btn.spinning{animation:btnBounce .6s ease infinite;pointer-events:none}
+@keyframes btnBounce{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.slot-container{width:100%;max-width:340px;height:200px;margin:16px auto;
+  perspective:600px;position:relative;overflow:hidden;display:none}
+.slot-container.active{display:block}
+.slot-track{display:flex;flex-direction:column;align-items:center;will-change:transform}
+.slot-item{width:280px;min-height:160px;padding:20px;margin:12px 0;
+  background:var(--warm-card);border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);text-align:center;flex-shrink:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center}
+.slot-item .food-emoji{font-size:48px;margin-bottom:6px}
+.slot-item .food-name{font-family:var(--font-display);font-size:20px}
+.slot-item .food-cat{font-size:12px;color:var(--text-secondary);margin-top:4px}
+
+/* Result card */
+.result-card{display:none;width:100%;max-width:360px;margin:0 auto;
+  background:var(--warm-card);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);overflow:hidden;animation:resultPop .4s cubic-bezier(.175,.885,.32,1.275)}
+@keyframes resultPop{from{opacity:0;transform:scale(.85) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.result-card.show{display:block}
+.result-card-header{background:linear-gradient(135deg,var(--primary),var(--accent2));
+  padding:24px 20px 18px;text-align:center;color:#fff;position:relative}
+.result-card-header::after{content:'';position:absolute;bottom:-12px;left:0;right:0;height:24px;
+  background:var(--warm-card);border-radius:50% 50% 0 0}
+.result-emoji{font-size:56px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.15));margin-bottom:4px}
+.result-name{font-family:var(--font-display);font-size:26px;letter-spacing:2px}
+.result-card-body{padding:12px 20px 20px}
+.result-meta-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.result-cat{display:inline-block;background:var(--warm-surface);color:var(--primary);
+  padding:3px 12px;border-radius:12px;font-size:12px;font-weight:500}
+.result-type-badge{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:500}
+.result-type-badge.dine-in{background:#E8F5E9;color:#388E3C}
+.result-type-badge.delivery{background:#E3F2FD;color:#1976D2}
+.result-price{font-size:14px;font-weight:700;color:var(--primary-dark)}
+.result-stars{color:#F4A261;font-size:14px;letter-spacing:1px}
+.result-eat-count{font-size:11px;color:var(--text-muted)}
+.result-desc{font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:10px}
+.result-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.result-tag{padding:3px 10px;border-radius:8px;font-size:11px;
+  background:rgba(232,115,42,.08);color:var(--primary-dark)}
+.result-factors{display:flex;gap:6px;flex-wrap:wrap}
+.factor-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;
+  border-radius:6px;font-size:10px;background:#E8F5E9;color:#388E3C}
+.result-actions{display:flex;gap:10px;justify-content:center;margin-top:16px}
+.btn{padding:11px 28px;border-radius:var(--radius);border:none;cursor:pointer;
+  font-family:var(--font-body);font-size:14px;font-weight:600;transition:all .25s;user-select:none}
+.btn-sm{padding:8px 18px;font-size:13px}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 16px rgba(232,115,42,.3)}
+.btn-primary:active{transform:scale(.95)}
+.btn-outline{background:transparent;color:var(--primary);border:2px solid var(--primary)}
+.btn-outline:active{background:var(--warm-surface)}
+.btn-success{background:var(--success);color:#fff}
+.btn-success:active{transform:scale(.95)}
+#confetti{position:fixed;inset:0;z-index:9998;pointer-events:none}
+
+/* Manage page */
+.page-title{font-family:var(--font-display);font-size:22px;margin-bottom:14px;
+  display:flex;align-items:center;gap:8px}
+.search-box{width:100%;padding:11px 16px 11px 42px;border-radius:var(--radius);
+  border:1.5px solid rgba(232,115,42,.15);background:var(--warm-card);
+  font-size:14px;font-family:var(--font-body);color:var(--text-primary);
+  outline:none;transition:border-color .25s}
+.search-box:focus{border-color:var(--primary)}
+.search-wrap{position:relative;margin-bottom:10px}
+.search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  width:18px;height:18px;color:var(--text-muted)}
+.cat-filter{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+.cat-filter::-webkit-scrollbar{display:none}
+.cat-chip{padding:5px 14px;border-radius:16px;font-size:12px;white-space:nowrap;
+  background:var(--warm-surface);color:var(--text-secondary);cursor:pointer;
+  transition:all .2s;border:1.5px solid transparent;flex-shrink:0;user-select:none}
+.cat-chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.food-list{display:flex;flex-direction:column;gap:10px;padding-bottom:80px}
+.food-item{display:flex;align-items:center;gap:10px;padding:12px 14px;
+  background:var(--warm-card);border-radius:var(--radius);box-shadow:var(--shadow-sm);transition:all .2s}
+.food-item:active{transform:scale(.98)}
+.food-item-emoji{font-size:34px;flex-shrink:0}
+.food-item-info{flex:1;min-width:0}
+.food-item-name{font-weight:600;font-size:14px;margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.food-item-name .type-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.food-item-name .type-dot.dine-in{background:#5B8C5A}
+.food-item-name .type-dot.delivery{background:#1976D2}
+.food-item-meta{font-size:11px;color:var(--text-secondary);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.food-item-meta .stars{color:#F4A261}
+.food-item-tags{display:flex;gap:4px;margin-top:3px;flex-wrap:wrap}
+.food-item-tags span{font-size:10px;padding:2px 6px;border-radius:4px;
+  background:rgba(232,115,42,.06);color:var(--text-muted)}
+.food-item-actions{display:flex;gap:6px;flex-shrink:0}
+.icon-btn{width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+  background:var(--warm-surface);color:var(--text-secondary);font-size:14px}
+.icon-btn:active{transform:scale(.9)}
+.icon-btn.danger{color:var(--danger)}
+.fab{position:fixed;bottom:calc(var(--nav-h) + 20px);right:20px;z-index:50;
+  width:54px;height:54px;border-radius:50%;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;
+  font-size:26px;box-shadow:var(--shadow-lg);transition:all .3s;
+  display:none;align-items:center;justify-content:center}
+.fab:active{transform:scale(.9) rotate(90deg)}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.45);
+  display:none;align-items:flex-end;justify-content:center;
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.modal-overlay.show{display:flex;animation:overlayIn .25s ease}
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--warm-card);border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+  width:100%;max-width:480px;max-height:85vh;overflow-y:auto;
+  padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+  animation:modalSlideUp .3s cubic-bezier(.175,.885,.32,1.275)}
+@keyframes modalSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-title{font-family:var(--font-display);font-size:20px;margin-bottom:14px;
+  display:flex;align-items:center;justify-content:space-between}
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:5px;display:block}
+.form-input,.form-select,.form-textarea{width:100%;padding:10px 14px;
+  border-radius:var(--radius-sm);border:1.5px solid rgba(232,115,42,.15);
+  background:var(--warm-bg);font-size:14px;font-family:var(--font-body);
+  color:var(--text-primary);outline:none;transition:border-color .25s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--primary)}
+.form-textarea{resize:vertical;min-height:50px}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%238B7355' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center}
+.form-row{display:flex;gap:10px}
+.form-row .form-group{flex:1}
+.emoji-picker{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.emoji-opt{width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;border-radius:8px;cursor:pointer;border:2px solid transparent;
+  transition:all .2s;background:var(--warm-surface)}
+.emoji-opt.selected{border-color:var(--primary);background:rgba(232,115,42,.1);transform:scale(1.1)}
+.tag-picker{display:flex;flex-wrap:wrap;gap:6px}
+.tag-opt{padding:5px 12px;border-radius:12px;font-size:12px;cursor:pointer;
+  border:1.5px solid rgba(232,115,42,.15);background:var(--warm-bg);
+  color:var(--text-secondary);transition:all .2s;user-select:none}
+.tag-opt.selected{border-color:var(--primary);background:var(--primary);color:#fff}
+.star-picker{display:flex;gap:4px}
+.star-pick{font-size:28px;cursor:pointer;transition:transform .15s;filter:grayscale(1);opacity:.4}
+.star-pick.active{filter:none;opacity:1;transform:scale(1.1)}
+.type-picker{display:flex;gap:8px}
+.type-opt{flex:1;padding:10px;border-radius:var(--radius-sm);text-align:center;
+  cursor:pointer;border:1.5px solid rgba(232,115,42,.15);background:var(--warm-bg);
+  font-size:13px;transition:all .2s;user-select:none}
+.type-opt.selected{border-color:var(--primary);background:var(--primary);color:#fff}
+.modal-actions{display:flex;gap:10px;margin-top:16px}
+.modal-actions .btn{flex:1}
+
+/* Nearby page */
+.nearby-note{font-size:12px;color:var(--text-muted);text-align:center;
+  margin-bottom:10px;padding:8px;background:var(--warm-surface);border-radius:var(--radius-sm)}
+.nearby-toggle{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;background:var(--warm-card);border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);margin-bottom:12px}
+.toggle-label{font-size:14px;font-weight:500}
+.toggle{width:48px;height:28px;border-radius:14px;background:#ddd;cursor:pointer;
+  position:relative;transition:background .25s;flex-shrink:0}
+.toggle.on{background:var(--success)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;
+  border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.15);transition:transform .25s}
+.toggle.on::after{transform:translateX(20px)}
+.nearby-list{display:flex;flex-direction:column;gap:10px;padding-bottom:20px}
+.nearby-item{display:flex;align-items:center;gap:12px;padding:12px 14px;
+  background:var(--warm-card);border-radius:var(--radius);box-shadow:var(--shadow-sm)}
+.nearby-item-icon{width:46px;height:46px;border-radius:12px;
+  background:linear-gradient(135deg,var(--warm-surface),#FFE4CC);
+  display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.nearby-item-info{flex:1;min-width:0}
+.nearby-item-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nearby-item-food{font-size:12px;color:var(--primary);margin-top:1px}
+.nearby-item-meta{font-size:11px;color:var(--text-muted);margin-top:3px;display:flex;gap:8px}
+.nearby-item-addr{font-size:10px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nearby-add-btn{flex-shrink:0;width:32px;height:32px;border-radius:50%;border:1.5px solid var(--primary);
+  background:transparent;color:var(--primary);font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s}
+.nearby-add-btn:active{background:var(--primary);color:#fff;transform:scale(.9)}
+.nearby-add-btn.added{background:var(--success);border-color:var(--success);color:#fff;font-size:12px}
+.star{color:#F4A261}
+.nearby-loading{text-align:center;padding:30px;color:var(--text-muted);font-size:14px}
+
+/* Chat page */
+.chat-container{flex-direction:column;padding:0 !important;overflow:hidden !important}
+.chat-header{padding:12px 16px;text-align:center;flex-shrink:0}
+.chat-messages{flex:1;overflow-y:auto;padding:8px 16px;-webkit-overflow-scrolling:touch;min-height:0}
+.chat-msg{display:flex;gap:8px;margin-bottom:12px;animation:msgIn .3s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.chat-msg.user{flex-direction:row-reverse}
+.chat-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:18px;flex-shrink:0}
+.chat-msg.bot .chat-avatar{background:linear-gradient(135deg,var(--primary),var(--accent))}
+.chat-msg.user .chat-avatar{background:var(--warm-surface)}
+.chat-bubble{max-width:75%;padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.6}
+.chat-msg.bot .chat-bubble{background:var(--warm-card);box-shadow:var(--shadow-sm);
+  border-bottom-left-radius:4px;color:var(--text-primary)}
+.chat-msg.user .chat-bubble{background:var(--primary);color:#fff;border-bottom-right-radius:4px}
+.chat-bubble .food-card-mini{background:var(--warm-surface);padding:10px;border-radius:10px;
+  margin-top:8px;font-size:12px}
+.chat-bubble .food-card-mini .fcm-name{font-weight:600;font-size:14px;margin-bottom:4px}
+.chat-bubble .action-btns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.chat-bubble .action-btn{padding:5px 12px;border-radius:10px;font-size:11px;
+  background:var(--primary);color:#fff;border:none;cursor:pointer;font-family:var(--font-body)}
+.chat-bubble .action-btn:active{opacity:.8}
+.chat-bubble .action-btn.outline{background:transparent;border:1px solid var(--primary);color:var(--primary)}
+.chat-input-bar{display:flex;gap:8px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));flex-shrink:0;
+  background:rgba(255,255,255,.95);border-top:1px solid rgba(232,115,42,.08);
+  margin-bottom:var(--nav-h)}
+.chat-input{flex:1;padding:10px 14px;border-radius:20px;border:1.5px solid rgba(232,115,42,.15);
+  background:var(--warm-bg);font-size:14px;font-family:var(--font-body);
+  color:var(--text-primary);outline:none}
+.chat-input:focus{border-color:var(--primary)}
+.chat-send{width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;
+  background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .2s}
+.chat-send:active{transform:scale(.9)}
+.chat-send svg{width:18px;height:18px}
+
+/* Settings */
+.settings-section{margin-bottom:18px}
+.settings-section-title{font-size:12px;font-weight:600;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-left:4px}
+.setting-row{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;background:var(--warm-card);border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);margin-bottom:8px}
+.setting-row label{font-size:13px;font-weight:500}
+.setting-input{width:170px;padding:8px 12px;border-radius:var(--radius-sm);
+  border:1.5px solid rgba(232,115,42,.15);background:var(--warm-bg);
+  font-size:13px;outline:none;font-family:var(--font-body)}
+.setting-input:focus{border-color:var(--primary)}
+.history-list{display:flex;flex-direction:column;gap:6px;padding-bottom:20px}
+.history-item{display:flex;align-items:center;gap:10px;padding:10px 14px;
+  background:var(--warm-card);border-radius:var(--radius-sm);box-shadow:var(--shadow-sm)}
+.history-item-emoji{font-size:26px}
+.history-item-info{flex:1}
+.history-item-name{font-size:13px;font-weight:500}
+.history-item-time{font-size:10px;color:var(--text-muted)}
+.btn-danger{background:var(--danger);color:#fff;width:100%;padding:12px;
+  border-radius:var(--radius);border:none;cursor:pointer;font-size:13px;
+  font-weight:600;font-family:var(--font-body);transition:all .2s}
+.btn-danger:active{transform:scale(.97);opacity:.9}
+.empty-state{text-align:center;padding:30px 20px;color:var(--text-muted)}
+.empty-state .empty-icon{font-size:48px;margin-bottom:10px;opacity:.6}
+.empty-state p{font-size:13px}
+
+.page::-webkit-scrollbar{width:4px}
+.page::-webkit-scrollbar-thumb{background:rgba(232,115,42,.15);border-radius:4px}
+
+@media(min-width:600px){
+  .page{padding:24px 32px calc(var(--nav-h) + 24px);max-width:560px;margin:0 auto}
+  .bottom-nav{max-width:560px;left:50%;transform:translateX(-50%);
+    border-radius:var(--radius-lg) var(--radius-lg) 0 0;border:1px solid rgba(232,115,42,.08)}
+  .spin-btn{width:190px;height:190px;font-size:26px}
+  .modal{border-radius:var(--radius-lg)}
+  .modal-overlay{align-items:center}
+  @keyframes modalSlideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .page.chat-container{max-width:560px;padding:0 !important}
+}
+</style>
+</head>
+<body>
+<div class="bg-blob bg-blob-1"></div>
+<div class="bg-blob bg-blob-2"></div>
+<div class="bg-blob bg-blob-3"></div>
+<canvas id="confetti"></canvas>
+
+<div class="app">
+  <!-- HOME -->
+  <div class="page active" id="page-home">
+    <div class="home-header">
+      <div class="weather-strip" id="weather-strip">
+        <span class="weather-icon" id="weather-icon">⏳</span>
+        <span id="weather-text">定位中...</span>
+      </div>
+      <div class="location-text" id="location-text"></div>
+      <div id="festival-area"></div>
+    </div>
+    <div class="mood-bar" id="mood-bar">
+      <div class="mood-pill active" data-mood="any">🎲 随便</div>
+      <div class="mood-pill" data-mood="rice">🍚 想吃饭</div>
+      <div class="mood-pill" data-mood="noodle">🍜 想吃面</div>
+      <div class="mood-pill" data-mood="snack">🍢 想吃小吃</div>
+      <div class="mood-pill" data-mood="soup">🍲 想喝汤</div>
+      <div class="mood-pill" data-mood="western">🍕 西餐</div>
+    </div>
+    <div class="spin-section">
+      <button class="spin-btn" id="spin-btn">今天<br>吃什么？</button>
+    </div>
+    <div class="slot-container" id="slot-container">
+      <div class="slot-track" id="slot-track"></div>
+    </div>
+    <div class="result-card" id="result-card">
+      <div class="result-card-header">
+        <div class="result-emoji" id="result-emoji"></div>
+        <div class="result-name" id="result-name"></div>
+      </div>
+      <div class="result-card-body">
+        <div class="result-meta-row">
+          <span class="result-cat" id="result-cat"></span>
+          <span class="result-type-badge" id="result-type"></span>
+          <span class="result-price" id="result-price"></span>
+        </div>
+        <div class="result-meta-row">
+          <span class="result-stars" id="result-stars"></span>
+          <span class="result-eat-count" id="result-eat-count"></span>
+        </div>
+        <p class="result-desc" id="result-desc"></p>
+        <div class="result-tags" id="result-tags"></div>
+        <div class="result-factors" id="result-factors"></div>
+        <div class="result-actions">
+          <button class="btn btn-outline btn-sm" id="btn-next">🔄 换一个</button>
+          <button class="btn btn-success btn-sm" id="btn-ate">🍽️ 去吃了</button>
+          <button class="btn btn-primary btn-sm" id="btn-confirm">✅ 就它了</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MANAGE -->
+  <div class="page" id="page-manage">
+    <div class="page-title">🍽️ 菜品管理</div>
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input class="search-box" id="search-box" type="text" placeholder="搜索菜品...">
+    </div>
+    <div class="cat-filter" id="manage-cat-filter"></div>
+    <div class="food-list" id="food-list"></div>
+    <button class="fab" id="fab-add">+</button>
+  </div>
+
+  <!-- NEARBY -->
+  <div class="page" id="page-nearby">
+    <div class="page-title" style="justify-content:space-between">
+      <span>📍 附近美食</span>
+      <button class="btn btn-sm btn-outline" id="btn-refresh-nearby" style="font-size:12px;padding:6px 14px">🔄 刷新</button>
+    </div>
+    <div class="nearby-note" id="nearby-note">📡 正在通过高德API获取附近餐饮信息...</div>
+    <div class="nearby-toggle">
+      <span class="toggle-label">将附近美食加入随机池</span>
+      <div class="toggle on" id="toggle-nearby"></div>
+    </div>
+    <div class="nearby-list" id="nearby-list">
+      <div class="nearby-loading">🔍 搜索附近美食中...</div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="page chat-container" id="page-chat">
+    <div class="chat-header">
+      <div class="page-title" style="justify-content:center">🤖 AI 美食助手</div>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-bar">
+      <input class="chat-input" id="chat-input" type="text" placeholder="告诉我你吃了什么、想吃什么...">
+      <button class="chat-send" id="chat-send">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="page" id="page-settings">
+    <div class="page-title">⚙️ 设置</div>
+    <div class="settings-section">
+      <div class="settings-section-title">AI 大模型配置</div>
+      <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:8px">
+        <label>API地址 (Base URL)</label>
+        <input class="setting-input" id="ai-url" style="width:100%" type="text" placeholder="https://api.deepseek.com">
+      </div>
+      <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:8px;margin-top:8px">
+        <label>API Key</label>
+        <input class="setting-input" id="ai-key" style="width:100%" type="password" placeholder="sk-xxx">
+      </div>
+      <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:8px;margin-top:8px">
+        <label>模型名称</label>
+        <input class="setting-input" id="ai-model" style="width:100%" type="text" placeholder="deepseek-chat">
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title">智能推荐</div>
+      <div class="setting-row">
+        <label>天气影响推荐</label>
+        <div class="toggle on" id="toggle-weather"></div>
+      </div>
+      <div class="setting-row">
+        <label>节日影响推荐</label>
+        <div class="toggle on" id="toggle-festival"></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title">历史记录</div>
+      <div class="history-list" id="history-list"></div>
+    </div>
+    <div class="settings-section">
+      <button class="btn-danger" id="btn-clear">🗑️ 清除所有数据</button>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" data-page="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>首页</span>
+    </div>
+    <div class="nav-item" data-page="manage">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <span>管理</span>
+    </div>
+    <div class="nav-item" data-page="nearby">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <span>附近</span>
+    </div>
+    <div class="nav-item" data-page="chat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>AI助手</span>
+    </div>
+    <div class="nav-item" data-page="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>设置</span>
+    </div>
+  </nav>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal">
+    <div class="modal-title">
+      <span id="modal-title-text">添加菜品</span>
+      <button class="icon-btn" id="modal-close" style="background:transparent">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">菜品名称</label>
+      <input class="form-input" id="form-name" type="text" placeholder="例如：红烧肉">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">分类</label>
+        <select class="form-select" id="form-category">
+          <option value="米饭类">🍚 米饭类</option><option value="面食类">🍜 面食类</option>
+          <option value="小吃类">🍢 小吃类</option><option value="汤类">🍲 汤类</option>
+          <option value="甜品类">🍰 甜品类</option><option value="饮品类">🧋 饮品类</option>
+          <option value="西餐">🍕 西餐</option><option value="日料">🍣 日料</option>
+          <option value="韩餐">🥘 韩餐</option><option value="其他">🍽️ 其他</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">价格 (元)</label>
+        <input class="form-input" id="form-price" type="number" placeholder="0" min="0">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">用餐方式</label>
+      <div class="type-picker" id="type-picker">
+        <div class="type-opt selected" data-type="dine-in">🏪 堂食</div>
+        <div class="type-opt" data-type="delivery">🛵 外卖</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">我的评分</label>
+      <div class="star-picker" id="star-picker">
+        <span class="star-pick active" data-v="1">⭐</span>
+        <span class="star-pick active" data-v="2">⭐</span>
+        <span class="star-pick active" data-v="3">⭐</span>
+        <span class="star-pick" data-v="4">⭐</span>
+        <span class="star-pick" data-v="5">⭐</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">图标</label>
+      <div class="emoji-picker" id="emoji-picker"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">店铺名称 (可选)</label>
+      <input class="form-input" id="form-shop" type="text" placeholder="例如：楼下老王面馆">
+    </div>
+    <div class="form-group">
+      <label class="form-label">简介</label>
+      <textarea class="form-textarea" id="form-desc" placeholder="简单描述..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">标签</label>
+      <div class="tag-picker" id="tag-picker"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="modal-cancel">取消</button>
+      <button class="btn btn-primary" id="modal-save">保存</button>
+    </div>
+  </div>
+</div>
+<script>
+// ========== CONFIG ==========
+const AMAP_KEY = 'd741d5e7cdf0bf707a66a6bd00fc1523';
+const SB_URL = 'https://wdofuppnjvigzepijudi.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indkb2Z1cHBuanZpZ3plcGlqdWRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODk5MDgsImV4cCI6MjA4OTM2NTkwOH0.3wQfvemzGo5SAUQNAs4hyJwVqAjk7ZINplvC34hJ6K8';
+const SB_HEADERS = {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'};
+
+// ========== SUPABASE HELPERS ==========
+async function sbGet(table, query=''){
+  try{const r=await fetch(`${SB_URL}/rest/v1/${table}?${query}`,{headers:SB_HEADERS});return await r.json()}
+  catch(e){console.error('SB GET err:',e);return null}
+}
+async function sbPost(table, data){
+  try{const r=await fetch(`${SB_URL}/rest/v1/${table}`,{method:'POST',headers:SB_HEADERS,body:JSON.stringify(data)});return await r.json()}
+  catch(e){console.error('SB POST err:',e);return null}
+}
+async function sbPatch(table, query, data){
+  try{const r=await fetch(`${SB_URL}/rest/v1/${table}?${query}`,{method:'PATCH',headers:SB_HEADERS,body:JSON.stringify(data)});return await r.json()}
+  catch(e){console.error('SB PATCH err:',e);return null}
+}
+async function sbDelete(table, query){
+  try{await fetch(`${SB_URL}/rest/v1/${table}?${query}`,{method:'DELETE',headers:SB_HEADERS});return true}
+  catch(e){console.error('SB DELETE err:',e);return false}
+}
+
+// DB row -> frontend object
+function dbToFood(r){
+  return {id:r.id,name:r.name,cat:r.cat,emoji:r.emoji,desc:r.description||'',
+    tags:r.tags||[],price:parseFloat(r.price)||0,type:r.type||'dine-in',
+    rating:r.rating||3,eatCount:r.eat_count||0,shop:r.shop||''};
+}
+// Frontend object -> DB row
+function foodToDb(f){
+  return {name:f.name,cat:f.cat,emoji:f.emoji,description:f.desc||'',
+    tags:f.tags||[],price:f.price||0,type:f.type||'dine-in',
+    rating:f.rating||3,eat_count:f.eatCount||0,shop:f.shop||''};
+}
+
+const FOOD_EMOJIS = ['🍚','🍜','🍝','🍲','🍛','🍗','🥩','🍖','🥟','🍢','🍕','🍔','🌮','🌯','🥙','🍣','🍱','🥘','🫕','🍰','🧁','🍧','🧋','🥗','🥣','🫓','🍡','🫔','🥮','🌶️','🔪','🍅','🫘','🐟','🦐','🥚'];
+const ALL_TAGS = ['辣','不辣','清淡','重口','快餐','正餐','夜宵'];
+const CATEGORIES = ['全部','米饭类','面食类','小吃类','汤类','甜品类','饮品类','西餐','日料','韩餐','其他'];
+const MOOD_CAT_MAP = {rice:['米饭类'],noodle:['面食类'],snack:['小吃类'],soup:['汤类'],western:['西餐','日料','韩餐'],any:null};
+
+// ========== STATE ==========
+let state = {
+  foods:[],
+  settings:{weatherOn:true,festivalOn:true,nearbyOn:true,
+    aiUrl:'https://api.deepseek.com',aiKey:'sk-5c593b218ef14b858c3460bf8a364539',aiModel:'deepseek-chat'},
+  history:[],
+  currentMood:'any',
+  weather:null,
+  location:null,
+  nearbyPOI:[],
+  editingId:null,
+};
+
+// ========== DATA LOAD/SAVE (Supabase) ==========
+async function loadFoods(){
+  const rows=await sbGet('foods','select=*&order=id.asc');
+  if(rows&&Array.isArray(rows))state.foods=rows.map(dbToFood);
+}
+async function loadSettings(){
+  const rows=await sbGet('settings','select=*&id=eq.1');
+  if(rows&&rows[0]){
+    const s=rows[0];
+    state.settings.weatherOn=s.weather_on;state.settings.festivalOn=s.festival_on;
+    state.settings.nearbyOn=s.nearby_on;state.settings.aiUrl=s.ai_url||'';
+    state.settings.aiKey=s.ai_key||'';state.settings.aiModel=s.ai_model||'deepseek-chat';
+  }
+}
+async function loadHistory(){
+  const rows=await sbGet('history','select=*&order=eaten_at.desc&limit=100');
+  if(rows&&Array.isArray(rows))state.history=rows.map(r=>({name:r.food_name,emoji:r.food_emoji,time:r.eaten_at}));
+}
+async function saveFoodToDB(food){
+  if(food.id&&typeof food.id==='number'){
+    await sbPatch('foods','id=eq.'+food.id,{...foodToDb(food),updated_at:new Date().toISOString()});
+  }
+}
+async function addFoodToDB(food){
+  const res=await sbPost('foods',foodToDb(food));
+  if(res&&res[0])return res[0].id;return null;
+}
+async function deleteFoodFromDB(id){await sbDelete('foods','id=eq.'+id)}
+async function addHistoryToDB(name,emoji){
+  await sbPost('history',{food_name:name,food_emoji:emoji});
+}
+async function saveSettingsToDB(){
+  await sbPatch('settings','id=eq.1',{
+    weather_on:state.settings.weatherOn,festival_on:state.settings.festivalOn,
+    nearby_on:state.settings.nearbyOn,ai_url:state.settings.aiUrl,
+    ai_key:state.settings.aiKey,ai_model:state.settings.aiModel,
+    updated_at:new Date().toISOString()
+  });
+}
+async function load(){
+  await Promise.all([loadFoods(),loadSettings(),loadHistory()]);
+}
+
+// ========== AMAP API (JSONP to bypass CORS) ==========
+function amapFetch(url){
+  return new Promise(resolve=>{
+    const cb='_amap_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+    const timeout=setTimeout(()=>{delete window[cb];resolve(null)},8000);
+    window[cb]=function(data){clearTimeout(timeout);delete window[cb];
+      try{document.head.removeChild(s)}catch(e){}resolve(data)};
+    const s=document.createElement('script');
+    s.src=url+(url.includes('?')?'&':'?')+'callback='+cb+'&output=JSON';
+    s.onerror=()=>{clearTimeout(timeout);delete window[cb];resolve(null)};
+    document.head.appendChild(s);
+  });
+}
+
+async function initLocation(){
+  // Step 1: IP定位
+  const ipRes = await amapFetch(`https://restapi.amap.com/v3/ip?key=${AMAP_KEY}`);
+  if(ipRes && ipRes.status==='1'){
+    // 高德IP API有时返回数组
+    const city=Array.isArray(ipRes.city)?'':ipRes.city;
+    const adcode=Array.isArray(ipRes.adcode)?'':ipRes.adcode;
+    state.location = {city:city||'未知',adcode:adcode||'',lng:'',lat:''};
+    document.getElementById('location-text').textContent = '📍 '+(city||'定位中...');
+    // Get weather
+    if(adcode) await fetchWeather(adcode);
+    // Try browser geolocation for better accuracy
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(async pos=>{
+        state.location.lng=pos.coords.longitude;
+        state.location.lat=pos.coords.latitude;
+        const geoRes=await amapFetch(`https://restapi.amap.com/v3/geocode/regeo?key=${AMAP_KEY}&location=${pos.coords.longitude},${pos.coords.latitude}`);
+        if(geoRes&&geoRes.status==='1'&&geoRes.regeocode){
+          const ac=geoRes.regeocode.addressComponent;
+          const c2=Array.isArray(ac.city)?ac.province:ac.city;
+          state.location.city=c2||state.location.city;
+          state.location.adcode=ac.adcode||state.location.adcode;
+          document.getElementById('location-text').textContent='📍 '+state.location.city+(ac.district&&!Array.isArray(ac.district)?' · '+ac.district:'');
+          if(ac.adcode)await fetchWeather(ac.adcode);
+        }
+        fetchNearbyPOI();
+      },()=>{fetchNearbyPOI()},{timeout:8000});
+    } else {
+      fetchNearbyPOI();
+    }
+  } else {
+    document.getElementById('weather-text').textContent='定位失败，使用默认数据';
+    document.getElementById('location-text').textContent='';
+    state.weather={temp:20,text:'多云',icon:'⛅',condition:'cloudy'};
+    updateWeatherUI();
+    fetchNearbyPOI();
+  }
+}
+
+async function fetchWeather(adcode){
+  if(!adcode)return;
+  const res=await amapFetch(`https://restapi.amap.com/v3/weather/weatherInfo?key=${AMAP_KEY}&city=${adcode}&extensions=base`);
+  if(res&&res.status==='1'&&res.lives&&res.lives[0]){
+    const w=res.lives[0];
+    const temp=parseInt(w.temperature)||20;
+    const text=w.weather||'多云';
+    let icon='⛅';let condition='cloudy';
+    if(text.includes('晴')){icon='☀️';condition='sunny'}
+    else if(text.includes('雨')){icon='🌧️';condition='rainy'}
+    else if(text.includes('雪')){icon='❄️';condition='snowy'}
+    else if(text.includes('阴')){icon='☁️';condition='cloudy'}
+    if(temp>=35){icon='🌡️';condition='hot'}
+    else if(temp<5){condition='cold'}
+    state.weather={temp,text,icon,condition};
+    updateWeatherUI();
+  }
+}
+
+async function fetchNearbyPOI(){
+  const noteEl=document.getElementById('nearby-note');
+  const listEl=document.getElementById('nearby-list');
+  listEl.innerHTML='<div class="nearby-loading">🔍 搜索附近美食中...</div>';
+
+  function parsePOIs(pois,hasDistance){
+    return pois.map(p=>{
+      const typeParts=(p.type||'').split(';');
+      const subType=typeParts[1]||typeParts[0]||'美食';
+      return {
+        name:p.name,food:subType,emoji:guessEmoji(p.name),
+        dist:hasDistance&&p.distance?Math.round(parseFloat(p.distance))+'m':'',
+        rating:parseFloat(p.biz_ext?.rating)||0,
+        address:p.address||'',tel:p.tel||'',
+        cat:guessCat(p.name,p.type),tags:['正餐'],
+        location:p.location||''
+      };
+    });
+  }
+
+  // Prefer GPS
+  let location='';
+  if(state.location?.lng&&state.location?.lat){
+    location=state.location.lng+','+state.location.lat;
+  }
+  if(location){
+    noteEl.textContent='💡 基于GPS定位搜索半径1.5km内的餐饮';
+    const res=await amapFetch(`https://restapi.amap.com/v3/place/around?key=${AMAP_KEY}&location=${location}&types=050000&radius=1500&offset=20&page=1&sortrule=distance`);
+    if(res&&res.status==='1'&&res.pois&&res.pois.length){
+      state.nearbyPOI=parsePOIs(res.pois,true);
+      renderNearby();return;
+    }
+  }
+  // Fallback: city keyword search
+  if(state.location?.adcode){
+    noteEl.textContent='💡 使用IP定位搜索附近餐饮（精度较低，建议允许浏览器定位以获取更准确的结果）';
+    const res=await amapFetch(`https://restapi.amap.com/v3/place/text?key=${AMAP_KEY}&keywords=餐厅&city=${state.location.adcode}&types=050000&offset=20&page=1&citylimit=true`);
+    if(res&&res.status==='1'&&res.pois&&res.pois.length){
+      state.nearbyPOI=parsePOIs(res.pois,false);
+      renderNearby();return;
+    }
+  }
+  noteEl.textContent='💡 未能获取附近美食数据，请点击右上角刷新，或确保定位权限已开启';
+  listEl.innerHTML='<div class="empty-state"><div class="empty-icon">📍</div><p>暂无附近美食数据</p></div>';
+}
+
+function guessEmoji(name){
+  if(name.includes('面')||name.includes('粉'))return'🍜';
+  if(name.includes('火锅'))return'🫕';if(name.includes('烤'))return'🍢';
+  if(name.includes('饺')||name.includes('包'))return'🥟';
+  if(name.includes('鸡'))return'🍗';if(name.includes('鱼'))return'🐟';
+  if(name.includes('茶')||name.includes('饮'))return'🧋';
+  if(name.includes('汉堡')||name.includes('麦当劳')||name.includes('肯德基'))return'🍔';
+  if(name.includes('披萨'))return'🍕';if(name.includes('寿司'))return'🍣';
+  return'🍽️';
+}
+function guessCat(name,type){
+  if(name.includes('面')||name.includes('粉'))return'面食类';
+  if(name.includes('火锅')||name.includes('汤'))return'汤类';
+  if(type?.includes('小吃'))return'小吃类';
+  if(type?.includes('西餐'))return'西餐';if(type?.includes('日'))return'日料';
+  return'米饭类';
+}
+
+// ========== FESTIVAL DETECTION ==========
+function detectFestival(){
+  const n=new Date(),m=n.getMonth()+1,d=n.getDate();
+  if(m===12&&(d===21||d===22))return{name:'冬至',emoji:'🧊',boost:['饺子','汤圆']};
+  if(m===1&&d===1)return{name:'元旦',emoji:'🎉',boost:[]};
+  if(m===1&&d>=28&&d<=30)return{name:'春节',emoji:'🧨',boost:['饺子']};
+  if(m===2&&d>=11&&d<=13)return{name:'元宵节',emoji:'🏮',boost:['汤圆']};
+  if(m===6&&d>=9&&d<=11)return{name:'端午节',emoji:'🐉',boost:['粽子']};
+  if(m===9&&d>=14&&d<=17)return{name:'中秋节',emoji:'🌕',boost:['月饼']};
+  if(m===1&&d>=6&&d<=8)return{name:'腊八节',emoji:'🥣',boost:['腊八粥']};
+  return null;
+}
+
+// ========== WEIGHTED ALGORITHM ==========
+function getWeightedPool(){
+  let pool = state.foods.map(f=>({...f,source:'custom',weight:10}));
+  // Include nearby
+  if(state.settings.nearbyOn && state.nearbyPOI.length){
+    state.nearbyPOI.forEach((r,i)=>{
+      pool.push({id:'n'+i,name:r.name,cat:r.cat,emoji:r.emoji,
+        desc:r.address||r.food+(r.dist?' · '+r.dist:''),tags:r.tags,
+        source:'nearby',weight:7,price:0,rating:Math.round(r.rating)||4,
+        type:'dine-in',eatCount:0,shop:r.name});
+    });
+  }
+  // === Factor 1: Mood ===
+  const moodCats=MOOD_CAT_MAP[state.currentMood];
+  if(moodCats){
+    pool.forEach(f=>{f.weight*=moodCats.includes(f.cat)?5:0.25});
+  }
+  // === Factor 2: Rating (1-5 stars) ===
+  // rating^1.8 gives strong preference to 5-star items
+  pool.forEach(f=>{
+    const r=f.rating||3;
+    f.weight *= Math.pow(r/3, 1.8); // 5-star ≈ 2.5x, 1-star ≈ 0.15x
+  });
+  // === Factor 3: Eat count (variety vs favorites balance) ===
+  // Sweet spot at 3-8 eats (proven favorites), diminishing after 15+
+  pool.forEach(f=>{
+    const c=f.eatCount||0;
+    if(c===0) f.weight*=1.2;       // slight novelty boost
+    else if(c<=3) f.weight*=1.4;   // trying it, liked enough to keep
+    else if(c<=8) f.weight*=1.3;   // proven favorite
+    else if(c<=15) f.weight*=1.0;  // still good
+    else f.weight*=0.7;            // variety penalty
+  });
+  // === Factor 4: Weather ===
+  if(state.settings.weatherOn && state.weather){
+    const t=state.weather.temp;const c=state.weather.condition;
+    pool.forEach(f=>{
+      const n=(f.name||'').toLowerCase();const cat=f.cat;
+      if(t<10){
+        if(n.includes('火锅')||cat==='汤类'||n.includes('热'))f.weight*=2.5;
+        if(n.includes('凉')||n.includes('冰'))f.weight*=0.2;
+      }
+      if(t>30){
+        if(n.includes('凉')||n.includes('冰')||f.tags?.includes('清淡'))f.weight*=2.5;
+        if(n.includes('火锅')||n.includes('烤'))f.weight*=0.3;
+      }
+      if(c==='rainy'&&(cat==='汤类'||n.includes('火锅')))f.weight*=2;
+    });
+  }
+  // === Factor 5: Festival ===
+  const fest=detectFestival();
+  if(state.settings.festivalOn&&fest?.boost.length){
+    pool.forEach(f=>{
+      if(fest.boost.some(b=>f.name.includes(b)))f.weight*=4;
+    });
+  }
+  // === Factor 6: Recently eaten penalty ===
+  const recent=state.history.slice(0,5).map(h=>h.name);
+  pool.forEach(f=>{
+    const idx=recent.indexOf(f.name);
+    if(idx===0)f.weight*=0.05;  // just ate
+    else if(idx===1)f.weight*=0.15;
+    else if(idx>=2)f.weight*=0.3;
+  });
+  return pool.filter(f=>f.weight>0);
+}
+
+function weightedRandom(pool){
+  const total=pool.reduce((s,f)=>s+f.weight,0);
+  let r=Math.random()*total;
+  for(const f of pool){r-=f.weight;if(r<=0)return f;}
+  return pool[pool.length-1];
+}
+
+// ========== UI: WEATHER ==========
+function updateWeatherUI(){
+  const w=state.weather;if(!w)return;
+  document.getElementById('weather-icon').textContent=w.icon;
+  document.getElementById('weather-text').textContent=w.text+' '+w.temp+'°C';
+  const fest=detectFestival();
+  document.getElementById('festival-area').innerHTML=fest?`<span class="festival-badge">${fest.emoji} ${fest.name}</span>`:'';
+}
+
+// ========== NAVIGATION ==========
+const pages=document.querySelectorAll('.page');
+const navItems=document.querySelectorAll('.nav-item');
+const fab=document.getElementById('fab-add');
+
+function switchPage(name){
+  pages.forEach(p=>p.classList.toggle('active',p.id==='page-'+name));
+  navItems.forEach(n=>n.classList.toggle('active',n.dataset.page===name));
+  fab.style.display=name==='manage'?'flex':'none';
+  if(name==='manage')renderFoodList();
+  if(name==='settings')renderSettings();
+}
+navItems.forEach(n=>n.addEventListener('click',()=>switchPage(n.dataset.page)));
+
+// ========== HOME: SPIN ==========
+const spinBtn=document.getElementById('spin-btn');
+const resultCard=document.getElementById('result-card');
+const slotContainer=document.getElementById('slot-container');
+const slotTrack=document.getElementById('slot-track');
+let isSpinning=false,currentResult=null;
+
+document.getElementById('mood-bar').addEventListener('click',e=>{
+  const pill=e.target.closest('.mood-pill');if(!pill)return;
+  document.querySelectorAll('.mood-pill').forEach(p=>p.classList.remove('active'));
+  pill.classList.add('active');state.currentMood=pill.dataset.mood;
+});
+
+spinBtn.addEventListener('click',()=>{
+  if(isSpinning)return;
+  const pool=getWeightedPool();
+  if(!pool.length){alert('没有可选的菜品！');return}
+  doSpin(pool);
+});
+
+function doSpin(pool){
+  isSpinning=true;resultCard.classList.remove('show');
+  slotContainer.classList.add('active');spinBtn.classList.add('spinning');
+  const items=[];for(let i=0;i<18;i++)items.push(pool[Math.floor(Math.random()*pool.length)]);
+  const winner=weightedRandom(pool);items.push(winner);
+  slotTrack.innerHTML=items.map(f=>`<div class="slot-item"><div class="food-emoji">${f.emoji}</div><div class="food-name">${f.name}</div><div class="food-cat">${f.cat}</div></div>`).join('');
+  const itemH=184,target=items.length*itemH-200;
+  let speed=40,currentPos=0;
+  const anim=()=>{
+    currentPos+=speed;
+    if(currentPos<target*0.6)speed=Math.min(speed+2,60);
+    else speed=Math.max(speed-1.5,3);
+    slotTrack.style.transform=`translateY(-${currentPos}px)`;
+    if(currentPos<target)requestAnimationFrame(anim);
+    else finishSpin(winner);
+  };
+  requestAnimationFrame(anim);
+}
+
+function starsStr(n){return '⭐'.repeat(n||0)+'☆'.repeat(5-(n||0))}
+
+function finishSpin(food){
+  isSpinning=false;spinBtn.classList.remove('spinning');slotContainer.classList.remove('active');
+  currentResult=food;
+  document.getElementById('result-emoji').textContent=food.emoji;
+  document.getElementById('result-name').textContent=food.name;
+  document.getElementById('result-cat').textContent=food.cat;
+  const typeEl=document.getElementById('result-type');
+  typeEl.textContent=food.type==='delivery'?'🛵 外卖':'🏪 堂食';
+  typeEl.className='result-type-badge '+(food.type==='delivery'?'delivery':'dine-in');
+  document.getElementById('result-price').textContent=food.price?'¥'+food.price:'';
+  document.getElementById('result-stars').textContent=starsStr(food.rating);
+  document.getElementById('result-eat-count').textContent='已吃 '+(food.eatCount||0)+' 次';
+  document.getElementById('result-desc').textContent=food.desc||'';
+  document.getElementById('result-tags').innerHTML=(food.tags||[]).map(t=>`<span class="result-tag">${t}</span>`).join('');
+  const factors=[];
+  if(state.settings.weatherOn&&state.weather)factors.push(`<span class="factor-badge">${state.weather.icon} 天气</span>`);
+  const fest=detectFestival();
+  if(state.settings.festivalOn&&fest)factors.push(`<span class="factor-badge">${fest.emoji} ${fest.name}</span>`);
+  if(food.source==='nearby')factors.push(`<span class="factor-badge">📍 附近</span>`);
+  document.getElementById('result-factors').innerHTML=factors.join('');
+  resultCard.classList.add('show');
+  if(navigator.vibrate)navigator.vibrate(50);
+}
+
+document.getElementById('btn-next').addEventListener('click',()=>{
+  const pool=getWeightedPool();
+  if(pool.length>1){const f=pool.filter(x=>x.name!==currentResult?.name);doSpin(f.length?f:pool)}
+  else doSpin(pool);
+});
+
+// "去吃了" - confirm + increment eat count
+document.getElementById('btn-ate').addEventListener('click',async()=>{
+  if(!currentResult)return;
+  const f=state.foods.find(x=>x.name===currentResult.name);
+  if(f){f.eatCount=(f.eatCount||0)+1;saveFoodToDB(f)}
+  state.history.unshift({name:currentResult.name,emoji:currentResult.emoji,time:new Date().toISOString()});
+  addHistoryToDB(currentResult.name,currentResult.emoji);
+  launchConfetti();
+  document.getElementById('result-eat-count').textContent='已吃 '+((f?.eatCount)||1)+' 次';
+  if(navigator.vibrate)navigator.vibrate([50,30,100]);
+});
+
+document.getElementById('btn-confirm').addEventListener('click',()=>{
+  if(!currentResult)return;
+  state.history.unshift({name:currentResult.name,emoji:currentResult.emoji,time:new Date().toISOString()});
+  addHistoryToDB(currentResult.name,currentResult.emoji);
+  resultCard.style.boxShadow='0 0 40px rgba(232,115,42,.5)';
+  setTimeout(()=>{resultCard.style.boxShadow=''},600);
+});
+
+// ========== CONFETTI ==========
+function launchConfetti(){
+  const c=document.getElementById('confetti'),ctx=c.getContext('2d');
+  c.width=innerWidth;c.height=innerHeight;
+  const ps=[],cols=['#E8732A','#F4A261','#E76F51','#F4845F','#FFD700','#FF6B6B','#4ECDC4'];
+  for(let i=0;i<80;i++)ps.push({x:c.width/2+(Math.random()*100-50),y:c.height/2,
+    vx:(Math.random()-.5)*12,vy:Math.random()*-14-4,sz:Math.random()*8+3,
+    col:cols[Math.floor(Math.random()*cols.length)],rot:Math.random()*360,
+    rs:(Math.random()-.5)*10,g:.3,life:1,decay:.008+Math.random()*.008});
+  let fr=0;
+  (function go(){
+    ctx.clearRect(0,0,c.width,c.height);let alive=false;
+    ps.forEach(p=>{if(p.life<=0)return;alive=true;
+      p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.rot+=p.rs;p.life-=p.decay;
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);
+      ctx.globalAlpha=p.life;ctx.fillStyle=p.col;
+      ctx.fillRect(-p.sz/2,-p.sz/2,p.sz,p.sz*.6);ctx.restore()});
+    if(alive&&fr<200){fr++;requestAnimationFrame(go)}
+    else ctx.clearRect(0,0,c.width,c.height);
+  })();
+}
+
+// ========== MANAGE PAGE ==========
+let manageFilter='全部',searchQuery='';
+
+function renderManageCatFilter(){
+  const el=document.getElementById('manage-cat-filter');
+  el.innerHTML=CATEGORIES.map(c=>`<div class="cat-chip${c===manageFilter?' active':''}" data-cat="${c}">${c}</div>`).join('');
+  el.onclick=e=>{const ch=e.target.closest('.cat-chip');if(!ch)return;
+    manageFilter=ch.dataset.cat;renderManageCatFilter();renderFoodList()};
+}
+
+function renderFoodList(){
+  const el=document.getElementById('food-list');
+  let foods=state.foods;
+  if(manageFilter!=='全部')foods=foods.filter(f=>f.cat===manageFilter);
+  if(searchQuery)foods=foods.filter(f=>f.name.includes(searchQuery)||f.cat.includes(searchQuery)||(f.shop||'').includes(searchQuery));
+  if(!foods.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🍽️</div><p>暂无菜品，点击 + 添加</p></div>';return}
+  el.innerHTML=foods.map(f=>`<div class="food-item" data-id="${f.id}">
+    <div class="food-item-emoji">${f.emoji}</div>
+    <div class="food-item-info">
+      <div class="food-item-name"><span class="type-dot ${f.type||'dine-in'}"></span>${f.name}</div>
+      <div class="food-item-meta">
+        <span>${f.cat}</span>${f.price?'<span>¥'+f.price+'</span>':''}
+        <span class="stars">${'⭐'.repeat(f.rating||3)}</span>
+        <span>吃过${f.eatCount||0}次</span>
+      </div>
+      <div class="food-item-tags">${(f.tags||[]).map(t=>'<span>'+t+'</span>').join('')}</div>
+    </div>
+    <div class="food-item-actions">
+      <button class="icon-btn edit-btn" data-id="${f.id}">✏️</button>
+      <button class="icon-btn danger del-btn" data-id="${f.id}">🗑️</button>
+    </div></div>`).join('');
+  el.querySelectorAll('.edit-btn').forEach(b=>b.onclick=e=>{e.stopPropagation();openModal(parseInt(b.dataset.id))});
+  el.querySelectorAll('.del-btn').forEach(b=>b.onclick=e=>{e.stopPropagation();
+    if(confirm('确定删除？')){const did=parseInt(b.dataset.id);deleteFoodFromDB(did);state.foods=state.foods.filter(f=>f.id!==did);renderFoodList()}});
+}
+
+document.getElementById('search-box').addEventListener('input',e=>{searchQuery=e.target.value.trim();renderFoodList()});
+
+// ========== MODAL ==========
+const modalOverlay=document.getElementById('modal-overlay');
+const emojiPicker=document.getElementById('emoji-picker');
+const tagPicker=document.getElementById('tag-picker');
+let selectedEmoji='🍚',selectedTags=[],selectedRating=3,selectedType='dine-in';
+
+function initPickers(){
+  emojiPicker.innerHTML=FOOD_EMOJIS.map(e=>`<div class="emoji-opt${e===selectedEmoji?' selected':''}" data-emoji="${e}">${e}</div>`).join('');
+  emojiPicker.onclick=ev=>{const o=ev.target.closest('.emoji-opt');if(!o)return;selectedEmoji=o.dataset.emoji;
+    emojiPicker.querySelectorAll('.emoji-opt').forEach(x=>x.classList.toggle('selected',x.dataset.emoji===selectedEmoji))};
+  tagPicker.innerHTML=ALL_TAGS.map(t=>`<div class="tag-opt" data-tag="${t}">${t}</div>`).join('');
+  tagPicker.onclick=ev=>{const o=ev.target.closest('.tag-opt');if(!o)return;const t=o.dataset.tag;
+    if(selectedTags.includes(t))selectedTags=selectedTags.filter(x=>x!==t);else selectedTags.push(t);
+    tagPicker.querySelectorAll('.tag-opt').forEach(x=>x.classList.toggle('selected',selectedTags.includes(x.dataset.tag)))};
+  document.getElementById('star-picker').onclick=ev=>{const s=ev.target.closest('.star-pick');if(!s)return;
+    selectedRating=parseInt(s.dataset.v);
+    document.querySelectorAll('#star-picker .star-pick').forEach(x=>x.classList.toggle('active',parseInt(x.dataset.v)<=selectedRating))};
+  document.getElementById('type-picker').onclick=ev=>{const o=ev.target.closest('.type-opt');if(!o)return;
+    selectedType=o.dataset.type;
+    document.querySelectorAll('#type-picker .type-opt').forEach(x=>x.classList.toggle('selected',x.dataset.type===selectedType))};
+}
+
+function openModal(id){
+  state.editingId=id||null;
+  const f=id?state.foods.find(x=>x.id===id):null;
+  document.getElementById('modal-title-text').textContent=f?'编辑菜品':'添加菜品';
+  document.getElementById('form-name').value=f?f.name:'';
+  document.getElementById('form-category').value=f?f.cat:'米饭类';
+  document.getElementById('form-price').value=f?f.price||'':'';
+  document.getElementById('form-shop').value=f?f.shop||'':'';
+  document.getElementById('form-desc').value=f?f.desc||'':'';
+  selectedEmoji=f?f.emoji:'🍚';selectedTags=f?[...(f.tags||[])]:[];
+  selectedRating=f?f.rating||3:3;selectedType=f?f.type||'dine-in':'dine-in';
+  emojiPicker.querySelectorAll('.emoji-opt').forEach(x=>x.classList.toggle('selected',x.dataset.emoji===selectedEmoji));
+  tagPicker.querySelectorAll('.tag-opt').forEach(x=>x.classList.toggle('selected',selectedTags.includes(x.dataset.tag)));
+  document.querySelectorAll('#star-picker .star-pick').forEach(x=>x.classList.toggle('active',parseInt(x.dataset.v)<=selectedRating));
+  document.querySelectorAll('#type-picker .type-opt').forEach(x=>x.classList.toggle('selected',x.dataset.type===selectedType));
+  modalOverlay.classList.add('show');
+}
+
+function closeModal(){modalOverlay.classList.remove('show');state.editingId=null}
+document.getElementById('modal-close').onclick=closeModal;
+document.getElementById('modal-cancel').onclick=closeModal;
+modalOverlay.onclick=e=>{if(e.target===modalOverlay)closeModal()};
+document.getElementById('fab-add').onclick=()=>openModal();
+
+document.getElementById('modal-save').onclick=async()=>{
+  const name=document.getElementById('form-name').value.trim();
+  if(!name){alert('请输入菜品名称');return}
+  const data={name,cat:document.getElementById('form-category').value,emoji:selectedEmoji,
+    desc:document.getElementById('form-desc').value.trim(),tags:[...selectedTags],
+    price:parseFloat(document.getElementById('form-price').value)||0,
+    type:selectedType,rating:selectedRating,
+    shop:document.getElementById('form-shop').value.trim()};
+  if(state.editingId){
+    const idx=state.foods.findIndex(f=>f.id===state.editingId);
+    if(idx>=0){data.eatCount=state.foods[idx].eatCount||0;data.id=state.editingId;Object.assign(state.foods[idx],data);saveFoodToDB(data)}
+  } else {
+    data.eatCount=0;
+    const newId=await addFoodToDB(data);
+    if(newId)data.id=newId;else data.id=Date.now();
+    state.foods.push(data);
+  }
+  closeModal();renderFoodList();
+};
+
+// ========== NEARBY ==========
+function renderNearby(){
+  const el=document.getElementById('nearby-list');
+  if(!state.nearbyPOI.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📍</div><p>暂无附近美食数据，点右上角刷新试试</p></div>';return}
+  el.innerHTML=state.nearbyPOI.map((r,i)=>{
+    const alreadyAdded=state.foods.some(f=>f.name===r.name||f.shop===r.name);
+    return `<div class="nearby-item">
+    <div class="nearby-item-icon">${r.emoji}</div>
+    <div class="nearby-item-info">
+      <div class="nearby-item-name">${r.name}</div>
+      <div class="nearby-item-food">${r.food}</div>
+      <div class="nearby-item-meta">${r.dist?'<span>📍 '+r.dist+'</span>':''}${r.rating?'<span class="star">★ '+r.rating+'</span>':''}</div>
+      ${r.address?'<div class="nearby-item-addr">'+r.address+'</div>':''}
+    </div>
+    <button class="nearby-add-btn${alreadyAdded?' added':''}" data-idx="${i}" title="${alreadyAdded?'已添加':'添加到我的菜单'}">${alreadyAdded?'✓':'+'}</button>
+  </div>`}).join('');
+  // Bind add buttons
+  el.querySelectorAll('.nearby-add-btn:not(.added)').forEach(btn=>{
+    btn.onclick=async function(){
+      const idx=parseInt(this.dataset.idx);
+      const r=state.nearbyPOI[idx];if(!r)return;
+      const newFood={name:r.name,cat:r.cat,emoji:r.emoji,desc:r.food+(r.address?' · '+r.address:''),
+        tags:r.tags||['正餐'],price:0,type:'dine-in',rating:Math.round(r.rating)||3,eatCount:0,shop:r.name};
+      const newId=await addFoodToDB(newFood);
+      if(newId)newFood.id=newId;else newFood.id=Date.now();
+      state.foods.push(newFood);
+      this.classList.add('added');this.textContent='✓';this.title='已添加';
+    };
+  });
+  document.getElementById('toggle-nearby').classList.toggle('on',state.settings.nearbyOn);
+}
+// Refresh button
+document.getElementById('btn-refresh-nearby').onclick=()=>{fetchNearbyPOI()};
+document.getElementById('toggle-nearby').onclick=function(){
+  state.settings.nearbyOn=!state.settings.nearbyOn;
+  this.classList.toggle('on',state.settings.nearbyOn);saveSettingsToDB()};
+
+// ========== SETTINGS ==========
+function renderSettings(){
+  document.getElementById('ai-url').value=state.settings.aiUrl||'';
+  document.getElementById('ai-key').value=state.settings.aiKey||'';
+  document.getElementById('ai-model').value=state.settings.aiModel||'gpt-4o-mini';
+  document.getElementById('toggle-weather').classList.toggle('on',state.settings.weatherOn);
+  document.getElementById('toggle-festival').classList.toggle('on',state.settings.festivalOn);
+  const hl=document.getElementById('history-list');
+  if(!state.history.length){hl.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>暂无记录</p></div>';return}
+  hl.innerHTML=state.history.slice(0,30).map(h=>{
+    const d=new Date(h.time);const ts=(d.getMonth()+1)+'/'+d.getDate()+' '+d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+    return `<div class="history-item"><div class="history-item-emoji">${h.emoji}</div>
+      <div class="history-item-info"><div class="history-item-name">${h.name}</div>
+      <div class="history-item-time">${ts}</div></div></div>`;
+  }).join('');
+}
+
+['ai-url','ai-key','ai-model'].forEach(id=>{
+  document.getElementById(id).addEventListener('change',function(){
+    if(id==='ai-url')state.settings.aiUrl=this.value.trim();
+    if(id==='ai-key')state.settings.aiKey=this.value.trim();
+    if(id==='ai-model')state.settings.aiModel=this.value.trim();
+    saveSettingsToDB();
+  });
+});
+document.getElementById('toggle-weather').onclick=function(){state.settings.weatherOn=!state.settings.weatherOn;this.classList.toggle('on',state.settings.weatherOn);saveSettingsToDB()};
+document.getElementById('toggle-festival').onclick=function(){state.settings.festivalOn=!state.settings.festivalOn;this.classList.toggle('on',state.settings.festivalOn);saveSettingsToDB()};
+document.getElementById('btn-clear').onclick=async()=>{
+  if(!confirm('确定清除所有数据？这会清空历史记录但保留菜品。'))return;
+  // Clear history in DB
+  await sbDelete('history','id=gt.0');
+  state.history=[];renderSettings();alert('历史记录已清除！');
+};
+
+// ========== AI CHAT ==========
+const chatMessages=document.getElementById('chat-messages');
+const chatInput=document.getElementById('chat-input');
+let chatHistory=[];
+
+function addChatMsg(role,html){
+  const div=document.createElement('div');
+  div.className='chat-msg '+role;
+  div.innerHTML=`<div class="chat-avatar">${role==='bot'?'🤖':'😋'}</div><div class="chat-bubble">${html}</div>`;
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop=chatMessages.scrollHeight;
+}
+
+function initChat(){
+  const hasAI=state.settings.aiUrl&&state.settings.aiKey;
+  const greeting=`你好！我是你的AI美食助手 🍽️<br><br>你可以跟我说：<br>
+• "我今天在XX店吃了刀削面，花了11块，味道不错"<br>
+• "帮我推荐一个午餐"<br>
+• "把麻辣香锅添加到菜单里"<br>
+• "给火锅打5分"<br>
+• "我最近都吃了什么" / "我最爱吃什么"<br><br>
+${hasAI?'🟢 已连接 DeepSeek 大模型，支持自然对话':'⚪ 未配置AI，使用本地解析（设置中可配置）'}`;
+  addChatMsg('bot',greeting);
+}
+
+// Local NLP parser
+function parseLocalChat(text){
+  const t=text.trim();
+
+  // Pattern: 我吃了XX / 今天吃了XX / 刚吃了XX
+  const ateMatch=t.match(/(?:我|今天|刚才?|中午|晚上|早上)?(?:去|在.+)?吃了(.+?)(?:[,，]|$)/);
+  if(ateMatch){
+    let foodName=ateMatch[1].replace(/(?:的|了)$/,'').trim();
+    let price=0,shop='',rating=0,liked=false,type='dine-in';
+    // Extract price
+    const pm=t.match(/(?:花了|花费|消费|付了|价格|价钱)?(\d+(?:\.\d+)?)\s*(?:块|元|¥|rmb)/i);
+    if(pm)price=parseFloat(pm[1]);
+    // Extract shop
+    const sm=t.match(/(?:在|去了?|是)(.{2,10}?)(?:家|店|的|吃)/);
+    if(sm)shop=sm[1].trim();
+    // Extract rating / feeling
+    if(t.includes('不错')||t.includes('好吃')||t.includes('喜欢')||t.includes('推荐')||t.includes('很棒')){liked=true;rating=4}
+    if(t.includes('非常好')||t.includes('超好吃')||t.includes('太好吃')||t.includes('绝了')||t.includes('强烈推荐')){liked=true;rating=5}
+    if(t.includes('一般')||t.includes('还行')||t.includes('凑合'))rating=3;
+    if(t.includes('难吃')||t.includes('不好吃')||t.includes('差'))rating=2;
+    if(t.includes('外卖')||t.includes('配送'))type='delivery';
+    if(t.includes('堂食')||t.includes('店里'))type='dine-in';
+    // Extract explicit rating
+    const rm=t.match(/(?:打|评|给)?(\d)\s*(?:分|星)/);
+    if(rm)rating=Math.min(5,Math.max(1,parseInt(rm[1])));
+
+    // Check if food exists
+    let existing=state.foods.find(f=>f.name===foodName||foodName.includes(f.name));
+    if(existing){
+      existing.eatCount=(existing.eatCount||0)+1;
+      if(price)existing.price=price;
+      if(shop)existing.shop=shop;
+      if(rating)existing.rating=rating;
+      if(type)existing.type=type;
+      saveFoodToDB(existing);
+      state.history.unshift({name:existing.name,emoji:existing.emoji,time:new Date().toISOString()});
+      addHistoryToDB(existing.name,existing.emoji);
+      return `已记录！${existing.emoji} <b>${existing.name}</b> 吃过次数+1 (共${existing.eatCount}次)
+        ${price?'<br>💰 价格已更新：¥'+price:''}
+        ${rating?'<br>⭐ 评分：'+starsStr(rating):''}
+        ${shop?'<br>🏪 店铺：'+shop:''}
+        <div class="food-card-mini"><div class="fcm-name">${existing.emoji} ${existing.name}</div>
+        ${existing.cat} · ¥${existing.price||'?'} · ${existing.type==='delivery'?'外卖':'堂食'} · 吃过${existing.eatCount}次</div>`;
+    } else {
+      // Add new food
+      const newFood={id:Date.now(),name:foodName,cat:guessCatFromName(foodName),
+        emoji:guessEmojiFromName(foodName),desc:'',tags:[],
+        price:price||0,type,rating:rating||3,eatCount:1,shop:shop||''};
+      addFoodToDB(newFood).then(nid=>{if(nid)newFood.id=nid});
+      state.foods.push(newFood);
+      state.history.unshift({name:newFood.name,emoji:newFood.emoji,time:new Date().toISOString()});
+      addHistoryToDB(newFood.name,newFood.emoji);
+      return `已帮你添加新菜品并记录！<div class="food-card-mini">
+        <div class="fcm-name">${newFood.emoji} ${newFood.name}</div>
+        ${newFood.cat} · ¥${newFood.price||'?'} · ${newFood.type==='delivery'?'外卖':'堂食'} · ${starsStr(newFood.rating)}
+        </div><div class="action-btns">
+        <button class="action-btn" onclick="switchPage('manage')">去管理页完善信息</button></div>`;
+    }
+  }
+
+  // Pattern: recommend
+  if(t.includes('推荐')||t.includes('吃什么')||t.includes('吃啥')||t.includes('建议')){
+    const pool=getWeightedPool();
+    if(!pool.length)return'你还没有添加菜品，先去管理页添加一些吧！';
+    const pick=weightedRandom(pool);
+    const reasons=[];
+    if(state.weather)reasons.push(state.weather.icon+' 天气'+state.weather.text+state.weather.temp+'°C');
+    const fest=detectFestival();if(fest)reasons.push(fest.emoji+' '+fest.name);
+    return `根据${reasons.length?reasons.join('、')+'等因素':'综合分析'}，我推荐你吃：
+      <div class="food-card-mini"><div class="fcm-name">${pick.emoji} ${pick.name}</div>
+      ${pick.cat} · ¥${pick.price||'?'} · ${starsStr(pick.rating)} · 吃过${pick.eatCount||0}次
+      ${pick.shop?'<br>🏪 '+pick.shop:''}</div>
+      <div class="action-btns">
+      <button class="action-btn" onclick="document.querySelectorAll('.mood-pill')[0].click();spinBtn.click();switchPage('home')">去首页随机选</button>
+      <button class="action-btn outline" onclick="sendChat('换一个推荐')">换一个</button></div>`;
+  }
+
+  // Pattern: rating change
+  const rateMatch=t.match(/(?:给|把)?(.+?)(?:打|评|改[成为]?)(\d)\s*(?:分|星)/);
+  if(rateMatch){
+    const name=rateMatch[1].trim();const r=Math.min(5,Math.max(1,parseInt(rateMatch[2])));
+    const f=state.foods.find(x=>x.name.includes(name)||name.includes(x.name));
+    if(f){f.rating=r;saveFoodToDB(f);return`已将 ${f.emoji} <b>${f.name}</b> 的评分更新为 ${starsStr(r)}`}
+    return`没找到"${name}"这道菜，要不要先添加？`;
+  }
+
+  // Pattern: add food
+  const addMatch=t.match(/(?:添加|加入|新增|加上)(.+?)(?:到|进|$)/);
+  if(addMatch){
+    const name=addMatch[1].replace(/(?:菜品?|菜单|备选)/g,'').trim();
+    if(!name)return'请告诉我要添加什么菜品？';
+    if(state.foods.find(f=>f.name===name))return`${name} 已经在你的菜单里了哦`;
+    const newFood={id:Date.now(),name,cat:guessCatFromName(name),emoji:guessEmojiFromName(name),
+      desc:'',tags:[],price:0,type:'dine-in',rating:3,eatCount:0,shop:''};
+    addFoodToDB(newFood).then(nid=>{if(nid)newFood.id=nid});
+    state.foods.push(newFood);
+    return`已添加 ${newFood.emoji} <b>${name}</b> 到你的菜单！<div class="action-btns">
+      <button class="action-btn" onclick="openModal(${newFood.id})">完善信息</button></div>`;
+  }
+
+  // Pattern: history query
+  if(t.includes('最近吃')||t.includes('吃过什么')||t.includes('历史')){
+    if(!state.history.length)return'暂无用餐记录哦';
+    const recent=state.history.slice(0,8);
+    return '最近的用餐记录：<br>'+recent.map(h=>{
+      const d=new Date(h.time);return`${h.emoji} ${h.name} - ${d.getMonth()+1}/${d.getDate()}`;
+    }).join('<br>');
+  }
+
+  // Pattern: favorite query
+  if(t.includes('最喜欢')||t.includes('最爱')||t.includes('经常吃')){
+    const sorted=[...state.foods].sort((a,b)=>(b.eatCount||0)-(a.eatCount||0));
+    const top=sorted.slice(0,5).filter(f=>(f.eatCount||0)>0);
+    if(!top.length)return'还没有足够的用餐数据，多吃几次再来看看吧 😄';
+    return '你最常吃的菜品：<br>'+top.map((f,i)=>`${i+1}. ${f.emoji} ${f.name} - ${starsStr(f.rating)} - 吃过${f.eatCount}次`).join('<br>');
+  }
+
+  return null; // No local match
+}
+
+function guessCatFromName(n){
+  if(n.includes('面')||n.includes('粉')||n.includes('饺')||n.includes('馄饨'))return'面食类';
+  if(n.includes('火锅')||n.includes('汤'))return'汤类';if(n.includes('串')||n.includes('烤'))return'小吃类';
+  if(n.includes('奶茶')||n.includes('咖啡')||n.includes('茶'))return'饮品类';
+  if(n.includes('蛋糕')||n.includes('甜'))return'甜品类';
+  if(n.includes('汉堡')||n.includes('披萨')||n.includes('意面'))return'西餐';
+  if(n.includes('寿司')||n.includes('刺身'))return'日料';
+  return'米饭类';
+}
+function guessEmojiFromName(n){
+  if(n.includes('面')||n.includes('粉'))return'🍜';if(n.includes('饺'))return'🥟';
+  if(n.includes('火锅'))return'🫕';if(n.includes('烤')||n.includes('串'))return'🍢';
+  if(n.includes('鸡'))return'🍗';if(n.includes('鱼'))return'🐟';
+  if(n.includes('奶茶'))return'🧋';if(n.includes('汉堡'))return'🍔';
+  if(n.includes('披萨'))return'🍕';if(n.includes('寿司'))return'🍣';
+  return'🍽️';
+}
+
+// AI API call
+async function callAI(userMsg){
+  if(!state.settings.aiUrl||!state.settings.aiKey)return null;
+  // Build proper endpoint URL
+  let apiUrl=state.settings.aiUrl.replace(/\/+$/,'');
+  if(!apiUrl.includes('/chat/completions')){
+    if(!apiUrl.endsWith('/v1'))apiUrl+='/v1';
+    apiUrl+='/chat/completions';
+  }
+  const sysPrompt=`你是一个美食助手AI，名叫"吃什么小助手"。用户有以下菜品库：
+${state.foods.slice(0,30).map(f=>`${f.name}(${f.cat},¥${f.price},${f.type==='delivery'?'外卖':'堂食'},${f.rating}星,吃过${f.eatCount}次)`).join('、')}
+当前天气：${state.weather?state.weather.text+state.weather.temp+'°C':'未知'}
+当前城市：${state.location?.city||'未知'}
+用户的意图可能是：记录吃了什么、让你推荐吃什么、添加/修改菜品、查看历史等。
+请用简洁友好的中文回复，回复不要太长。
+如果需要执行操作（记录吃饭、添加菜品、修改评分），请在回复末尾附加一个JSON指令块，用<json></json>标签包裹：
+记录吃了什么：<json>{"action":"ate","food":"菜名","price":数字或0,"shop":"店名或空","rating":1到5或0,"type":"dine-in或delivery","liked":true/false}</json>
+添加菜品：<json>{"action":"add","food":"菜名","cat":"分类","price":数字或0}</json>
+修改评分：<json>{"action":"rate","food":"菜名","rating":1到5}</json>
+如果不需要执行操作，直接用自然语言回复即可，不要附加JSON。`;
+
+  try{
+    const res=await fetch(apiUrl,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.settings.aiKey},
+      body:JSON.stringify({
+        model:state.settings.aiModel||'deepseek-chat',
+        messages:[
+          {role:'system',content:sysPrompt},
+          ...chatHistory.slice(-10),
+          {role:'user',content:userMsg}
+        ],
+        temperature:0.7,max_tokens:800
+      })
+    });
+    const data=await res.json();
+    if(data.error){console.error('AI API error:',data.error);return{text:'API错误：'+(data.error.message||JSON.stringify(data.error)),action:null}}
+    const reply=data.choices?.[0]?.message?.content||'';
+    if(!reply)return null;
+
+    // Try to extract JSON action
+    const jsonMatch=reply.match(/<json>([\s\S]*?)<\/json>/);
+    if(jsonMatch){
+      try{
+        const action=JSON.parse(jsonMatch[1]);
+        const textPart=reply.replace(/<json>[\s\S]*?<\/json>/,'').trim();
+        return {text:textPart,action};
+      }catch(e){}
+    }
+    return {text:reply,action:null};
+  }catch(e){console.error('AI call error:',e);return null}
+}
+
+async function sendChat(text){
+  if(!text)text=chatInput.value.trim();
+  if(!text)return;
+  chatInput.value='';
+  addChatMsg('user',text);
+
+  // Try local parsing first
+  const localResult=parseLocalChat(text);
+  if(localResult){addChatMsg('bot',localResult);return}
+
+  // Try AI API
+  if(state.settings.aiUrl&&state.settings.aiKey){
+    addChatMsg('bot','🤔 思考中...');
+    chatHistory.push({role:'user',content:text});
+    const aiResult=await callAI(text);
+    // Remove thinking msg
+    chatMessages.lastChild.remove();
+    if(aiResult){
+      // Process action if any
+      if(aiResult.action){
+        const a=aiResult.action;
+        if(a.action==='ate'&&a.food){
+          const fakeText=`我吃了${a.food}${a.price?'，花了'+a.price+'元':''}${a.shop?'，在'+a.shop:''}${a.rating?'，'+a.rating+'分':''}${a.liked?'，好吃':''}${a.type==='delivery'?'，外卖':''}`;
+          const r=parseLocalChat(fakeText);
+          if(r){addChatMsg('bot',(aiResult.text?aiResult.text+'<br><br>':'')+r);chatHistory.push({role:'assistant',content:aiResult.text||r});return}
+        }
+        if(a.action==='add'&&a.food){
+          const fakeText=`添加${a.food}到菜单`;
+          const r=parseLocalChat(fakeText);
+          if(r){addChatMsg('bot',(aiResult.text?aiResult.text+'<br><br>':'')+r);chatHistory.push({role:'assistant',content:aiResult.text||r});return}
+        }
+        if(a.action==='rate'&&a.food&&a.rating){
+          const fakeText=`给${a.food}打${a.rating}分`;
+          const r=parseLocalChat(fakeText);
+          if(r){addChatMsg('bot',(aiResult.text?aiResult.text+'<br><br>':'')+r);chatHistory.push({role:'assistant',content:aiResult.text||r});return}
+        }
+      }
+      addChatMsg('bot',aiResult.text||'抱歉，我没有理解你的意思');
+      chatHistory.push({role:'assistant',content:aiResult.text});
+    } else {
+      addChatMsg('bot','AI接口调用失败，请检查设置中的API配置');
+    }
+  } else {
+    addChatMsg('bot',`抱歉，我没有完全理解你的意思 😅<br><br>你可以试试这样说：<br>
+      • "我吃了红烧肉，花了28元，好吃"<br>• "推荐一个午餐"<br>• "添加麻辣香锅到菜单"<br>• "给火锅打5分"<br><br>
+      💡 配置AI大模型后可以进行更自然的对话（在设置页配置）`);
+  }
+}
+
+document.getElementById('chat-send').onclick=()=>sendChat();
+chatInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)sendChat()});
+
+// ========== INIT ==========
+(async()=>{
+  await load();
+  initPickers();renderManageCatFilter();initChat();initLocation();
+})();
+</script>
+</body>
+</html>
